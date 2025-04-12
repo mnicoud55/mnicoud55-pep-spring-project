@@ -1,9 +1,8 @@
 package com.example.controller;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,7 +29,6 @@ public class SocialMediaController {
     private AccountService accountService;
     private MessageService messageService;
 
-    @Autowired
     public SocialMediaController(AccountService accountService, MessageService messageService) {
         this.accountService = accountService;
         this.messageService = messageService;
@@ -67,27 +65,40 @@ public class SocialMediaController {
 
     @GetMapping("/messages")
     public ResponseEntity<List<Message>> getAllMessages() {
-        return ResponseEntity.ok(new ArrayList<Message>());
+        return ResponseEntity.ok(messageService.getAllMessages());
     }
 
     @GetMapping("/messages/{messageId}") 
     public ResponseEntity<Message> getMessageById(@PathVariable int messageId) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        Optional<Message> message = messageService.getMessage(messageId);
+        if (message.isPresent())
+            return ResponseEntity.ok(messageService.getMessage(messageId).get());
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @DeleteMapping("/messages/{messageId}")
     public ResponseEntity<Integer> deleteMessageById(@PathVariable int messageId) {
-        return ResponseEntity.ok(null);
+        try {
+            messageService.deleteMessage(messageId);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.OK).build();
+        }
+        return ResponseEntity.ok(1);
     }
 
     @PatchMapping("/messages/{messageId}")
-    public ResponseEntity<Integer> updateMessageText(@PathVariable int messageId) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    public ResponseEntity<Integer> updateMessageText(@RequestBody Message newMessage, @PathVariable int messageId) {
+        try {
+            messageService.updateMessage(newMessage, messageId);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        return ResponseEntity.ok(1);    
     }
 
     @GetMapping("/accounts/{accountId}/messages")
     public ResponseEntity<List<Message>> getAllMessagesByUser(@PathVariable int accountId) {
-        return ResponseEntity.ok(new ArrayList<Message>());
+        return ResponseEntity.ok(messageService.getAllMessagesByAccount(accountId));
     }
     
 }
