@@ -2,13 +2,16 @@ package com.example.service;
 
 import java.util.Optional;
 
-import javax.transaction.Transactional;
-
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.example.entity.Account;
 import com.example.repository.AccountRepository;
 
+/*
+ * Service class for the Account entity
+ */
 @Service
 @Transactional
 public class AccountService {
@@ -19,21 +22,16 @@ public class AccountService {
         this.accountRepository = accountRepository;
     }
 
-    /*
-     * THROW EXCEPTION INSTEAD OF RETURN NULL??
-     * ???????????????????????????????????????
-     * _________________________________________________
-     */
-    public Account createAccount(Account newAccount) {
+    public Account createAccount(Account newAccount) throws DataIntegrityViolationException {
         if (accountRepository.findByUsername(newAccount.getUsername()) != null)
-            return null;
+            throw new DataIntegrityViolationException("Duplicate username detected.");
         return accountRepository.save(newAccount);
     }
 
-    public Account verifyAccount(Account verify) {
+    public Account verifyAccount(Account verify) throws SecurityException {
         Account account = accountRepository.findByUsername(verify.getUsername());
         if (account == null || !account.getPassword().equals(verify.getPassword()))   
-            return null;
+            throw new SecurityException("Unsuccessful login.");
         return account;
     }
 

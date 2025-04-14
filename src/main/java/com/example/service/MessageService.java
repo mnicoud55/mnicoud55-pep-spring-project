@@ -1,15 +1,18 @@
 package com.example.service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
-import javax.transaction.Transactional;
-
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import com.example.entity.Message;
 import com.example.repository.MessageRepository;
 
+/*
+ * Service class for the Message entity.
+ */
 @Service
 @Transactional
 public class MessageService {
@@ -20,9 +23,9 @@ public class MessageService {
         this.messageRepository = messageRepository;
     }
 
-    public Message createMessage(Message message) {
-        if (message.getMessageText().length() < 1 || message.getMessageText().length() > 255)
-            return null;
+    public Message createMessage(Message message) throws IllegalArgumentException {
+        if (message == null || message.getMessageText().length() < 1 || message.getMessageText().length() > 255)
+            throw new IllegalArgumentException("Invalid message length.");
         return messageRepository.save(message);
     }
 
@@ -34,15 +37,15 @@ public class MessageService {
         return messageRepository.findById(id);
     }
 
-    public void deleteMessage(int id) throws RuntimeException {
+    public void deleteMessage(int id) throws NoSuchElementException {
         if (getMessage(id).isEmpty())
-            throw new IllegalArgumentException();
+            throw new NoSuchElementException("No message with ID " + id + " found.");
         messageRepository.deleteById(id);
     }
 
     public void updateMessage(Message newMessage, int id) throws RuntimeException {
         if (newMessage == null || getMessage(id).isEmpty() || newMessage.getMessageText().length() < 1 || newMessage.getMessageText().length() > 255)
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Invalid message.");
         messageRepository.save(newMessage);
     }
 
